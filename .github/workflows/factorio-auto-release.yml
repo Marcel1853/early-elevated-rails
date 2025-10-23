@@ -25,21 +25,30 @@ jobs:
           VERSION=$(jq -r '.version' info.json)
           echo "name=$NAME" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "🧩 Mod: $NAME"
-          echo "📦 Version: $VERSION"
+          echo "Mod: $NAME"
+          echo "Version: $VERSION"
 
       - name: Check latest version on Mod Portal
         id: check
         run: |
+          echo "�9�3 Checking existing mod on Factorio portal..."
           RESPONSE=$(curl -s https://mods.factorio.com/api/v2/mods/${{ steps.info.outputs.name }})
-          LATEST=$(echo "$RESPONSE" | jq -r '.releases[-1].version')
-          echo "🔍 Latest version on portal: $LATEST"
+
+          # Prüfen, ob g��ltiges JSON zur��ckkommt
+          if echo "$RESPONSE" | jq . >/dev/null 2>&1; then
+            LATEST=$(echo "$RESPONSE" | jq -r '.releases[-1].version // "none"')
+            echo "Latest version on portal: $LATEST"
+          else
+            echo "�7�2�1�5 No valid JSON from portal �� probably first upload or mod not found."
+            LATEST="none"
+          fi
+
           echo "latest=$LATEST" >> $GITHUB_OUTPUT
 
       - name: Skip if version unchanged
         if: ${{ steps.info.outputs.version == steps.check.outputs.latest }}
         run: |
-          echo "Version ${{ steps.info.outputs.version }} already on portal – skipping upload."
+          echo "Version ${{ steps.info.outputs.version }} already on portal �� skipping upload."
           exit 0
 
       - name: Prepare mod folder
@@ -51,45 +60,65 @@ jobs:
         working-directory: build
         run: |
           zip -r "../${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip" "${{ steps.info.outputs.name }}"
-          echo "✅ Created ${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip"
+          echo "�7�3 Created ${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip"
 
       - name: Initialize upload (init_upload)
         id: init
         run: |
+          echo "�9�9 Requesting upload URL..."
           RESPONSE=$(curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.FACTORIO_MOD_PORTAL_TOKEN }}" \
             -F "mod=${{ steps.info.outputs.name }}" \
             https://mods.factorio.com/api/v2/mods/releases/init_upload)
-          UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.upload_url')
-          if [ "$UPLOAD_URL" = "null" ] || [ -z "$UPLOAD_URL" ]; then
-            echo "❌ Failed to get upload URL"
+
+          if echo "$RESPONSE" | jq . >/dev/null 2>&1; then
+            UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.upload_url // empty')
+          else
+            echo "�7�4 Invalid response from init_upload"
             echo "$RESPONSE"
             exit 1
           fi
+
+          if [ -z "$UPLOAD_URL" ]; then
+            echo "�7�4 Failed to get upload URL"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
           echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
+          echo "�7�3 Got upload URL."
 
       - name: Finish upload (finish_upload)
         run: |
-          echo "⬆️ Uploading mod to Factorio Mod Portal..."
-          curl -X POST \
+          echo "�8�8�1�5 Uploading mod to Factorio Mod Portal..."
+          RESPONSE=$(curl -s -X POST \
             -F "file=@${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip" \
-            "${{ steps.init.outputs.upload_url }}"
-          echo "✅ Upload complete."
+            "${{ steps.init.outputs.upload_url }}")
+
+          echo "Portal response:"
+          echo "$RESPONSE"
+
+          if echo "$RESPONSE" | grep -q '"error"'; then
+            echo "�7�4 Upload failed."
+            exit 1
+          fi
+
+          echo "�7�3 Upload complete."
 
       - name: Update or create release branch
         run: |
-          echo "🔄 Updating release branch..."
+          echo "�9�4 Updating release branch..."
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git fetch origin || true
           git checkout -B release
           git merge --no-ff origin/main -m "Release ${{ steps.info.outputs.version }}" || true
           git push origin release --force
-          echo "✅ Release branch updated."
+          echo "�7�3 Release branch updated."
 
       - name: Create git tag
         run: |
           TAG="v${{ steps.info.outputs.version }}"
           git tag -f "$TAG"
           git push origin "$TAG" --force
-          echo "🏷️ Created tag $TAG"
+          echo "�9�5�1�5 Created tag $TAG"
