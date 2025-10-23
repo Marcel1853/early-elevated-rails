@@ -25,8 +25,11 @@ jobs:
           VERSION=$(jq -r '.version' info.json)
           echo "name=$NAME" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Mod: $NAME"
-          echo "Version: $VERSION"
+          echo "�0�7 Mod: $NAME"
+          echo "�9�4 Version: $VERSION"
+          
+          # Kurze Pause, damit GitHub Actions alles richtig verarbeitet
+          sleep 2
 
       - name: Check latest version on Mod Portal
         id: check
@@ -34,7 +37,7 @@ jobs:
           echo "�9�3 Checking existing mod on Factorio portal..."
           RESPONSE=$(curl -s https://mods.factorio.com/api/v2/mods/${{ steps.info.outputs.name }})
 
-          # Prüfen, ob g��ltiges JSON zur��ckkommt
+          # Pr��fen, ob g��ltiges JSON zur��ckkommt
           if echo "$RESPONSE" | jq . >/dev/null 2>&1; then
             LATEST=$(echo "$RESPONSE" | jq -r '.releases[-1].version // "none"')
             echo "Latest version on portal: $LATEST"
@@ -45,10 +48,13 @@ jobs:
 
           echo "latest=$LATEST" >> $GITHUB_OUTPUT
 
+      - name: Pause before comparison
+        run: sleep 2
+
       - name: Skip if version unchanged
         if: ${{ steps.info.outputs.version == steps.check.outputs.latest }}
         run: |
-          echo "Version ${{ steps.info.outputs.version }} already on portal �� skipping upload."
+          echo "Version ${{ steps.info.outputs.version }} already on portal �C skipping upload."
           exit 0
 
       - name: Prepare mod folder
@@ -61,6 +67,9 @@ jobs:
         run: |
           zip -r "../${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip" "${{ steps.info.outputs.name }}"
           echo "�7�3 Created ${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip"
+      
+      - name: Pause before upload
+        run: sleep 2
 
       - name: Initialize upload (init_upload)
         id: init
