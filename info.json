@@ -1,12 +1,13 @@
 {
     "name": "early-elevated-rails",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "title": "Early Elevated Rails",
     "author": "marcel171297",
     "factorio_version": "2.0",
     "dependencies": [
         "base >= 2.0.0",
-        "?boblogistics"
+        "elevated-rails >= 2.0.0",
+        "?boblogistics >= 2.0.3"
     ],
     "description": "Makes Elevated Rails available earlier in the tech tree. Compatible with Bob's Mods.\n\nMacht Elevated Rails früher im Technologiebaum verfügbar. Kompatibel mit Bob's Mods."
 }

@@ -1,0 +1,95 @@
+name: Auto Release & Upload Factorio Mod
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install jq, zip, rsync
+        run: sudo apt-get install -y jq zip rsync
+
+      - name: Read mod info
+        id: info
+        run: |
+          NAME=$(jq -r '.name' info.json)
+          VERSION=$(jq -r '.version' info.json)
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "🧩 Mod: $NAME"
+          echo "📦 Version: $VERSION"
+
+      - name: Check latest version on Mod Portal
+        id: check
+        run: |
+          RESPONSE=$(curl -s https://mods.factorio.com/api/v2/mods/${{ steps.info.outputs.name }})
+          LATEST=$(echo "$RESPONSE" | jq -r '.releases[-1].version')
+          echo "🔍 Latest version on portal: $LATEST"
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+
+      - name: Skip if version unchanged
+        if: ${{ steps.info.outputs.version == steps.check.outputs.latest }}
+        run: |
+          echo "Version ${{ steps.info.outputs.version }} already on portal – skipping upload."
+          exit 0
+
+      - name: Prepare mod folder
+        run: |
+          mkdir -p build/${{ steps.info.outputs.name }}
+          rsync -av --exclude 'build' --exclude '.git*' ./ build/${{ steps.info.outputs.name }}/
+
+      - name: Create ZIP archive
+        working-directory: build
+        run: |
+          zip -r "../${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip" "${{ steps.info.outputs.name }}"
+          echo "✅ Created ${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip"
+
+      - name: Initialize upload (init_upload)
+        id: init
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.FACTORIO_MOD_PORTAL_TOKEN }}" \
+            -F "mod=${{ steps.info.outputs.name }}" \
+            https://mods.factorio.com/api/v2/mods/releases/init_upload)
+          UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.upload_url')
+          if [ "$UPLOAD_URL" = "null" ] || [ -z "$UPLOAD_URL" ]; then
+            echo "❌ Failed to get upload URL"
+            echo "$RESPONSE"
+            exit 1
+          fi
+          echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
+
+      - name: Finish upload (finish_upload)
+        run: |
+          echo "⬆️ Uploading mod to Factorio Mod Portal..."
+          curl -X POST \
+            -F "file=@${{ steps.info.outputs.name }}_${{ steps.info.outputs.version }}.zip" \
+            "${{ steps.init.outputs.upload_url }}"
+          echo "✅ Upload complete."
+
+      - name: Update or create release branch
+        run: |
+          echo "🔄 Updating release branch..."
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git fetch origin || true
+          git checkout -B release
+          git merge --no-ff origin/main -m "Release ${{ steps.info.outputs.version }}" || true
+          git push origin release --force
+          echo "✅ Release branch updated."
+
+      - name: Create git tag
+        run: |
+          TAG="v${{ steps.info.outputs.version }}"
+          git tag -f "$TAG"
+          git push origin "$TAG" --force
+          echo "🏷️ Created tag $TAG"

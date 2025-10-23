@@ -1,0 +1,34 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.0.3
+Date: 2025-10-25
+  Changes:
+    - Updated mod dependency to require elevated-rails mod version 2.0.0 or higher.
+    - Updated mod dependency to require boblogistics mod version 2.0.3 or higher for compatibility.
+---------------------------------------------------------------------------------------------------
+Version: 0.0.2
+Date: 2025-10-22
+  Bugfixes:
+    - Fixed technology modifications not applying correctly in some cases.
+    - Fixed mod compatibility issues when loaded alongside other rail mods.
+    - Fixed elevated-rail technology not being properly hidden.
+    - Fixed duplicate recipe entries in railway technology.
+  Changes:
+    - Moved all technology changes to data-final-fixes phase for better compatibility.
+    - Added duplicate recipe check to prevent double entries in railway technology.
+    - Improved Bob's Logistics mod integration.
+    - Reorganized code structure to use data-final-fixes.lua instead of data.lua.
+    - Now properly hides the original elevated-rail technology.
+    - Ensured rail-planner-elevated-rails technology is available after railway research.
+  Optimizations:
+    - Better mod load order handling ensures changes are applied last.
+    - Improved code structure with separate vanilla and mod-support files.
+---------------------------------------------------------------------------------------------------
+Version: 0.0.1
+Date: ??
+  Features:
+    - Initial release.
+    - Makes elevated rails available at railway technology (red + green science).
+    - Makes rail planner for elevated rails available earlier (red + green science).
+    - Makes refined concrete available earlier (red + green science).
+    - Hides original elevated-rail technology.
+    - Bob's Logistics compatibility.
