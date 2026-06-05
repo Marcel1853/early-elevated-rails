@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.0.4
+Date: 2026-06-05
+  Bugfixes:
+    - FIXED: Rail supports could not be placed on Fulgora in the deep oil ocean.
+      Cause: The technology "rail-support-foundations" required "elevated-rail".
+      Since elevated-rail is disabled by the mod, rail-support-foundations could never
+      be researched and the "rail-support-on-deep-oil-ocean" effect was never enabled.
+      Fix: Replaced "elevated-rail" with "railway" in the prerequisites for rail-support-foundations.
+    - FIXED: rail-planner-allow-elevated-rails modifier was missing in new games.
+      The G-switch in the Rail Planner now works correctly after railway research.
+  Changes:
+    - New control.lua: Existing saves are automatically migrated on load.
+      If railway or elevated-rail was already researched, all elevated-rail recipes are
+      ensured to be enabled (idempotent, harmless if already active).
+    - Code cleanup in vanilla.lua: removed conflicting rail-planner hidden assignments.
+    - Updated prototypes/mod-support.lua: Fixed rail-support-foundations and
+      rail-planner-allow-elevated-rails in mod compatibility code as well.
+---------------------------------------------------------------------------------------------------
 Version: 0.0.3
 Date: 2025-10-25
   Changes:

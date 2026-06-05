@@ -2,11 +2,12 @@
     "factorio.versions": [
         {
             "name": "factorio",
-            "factorioPath": "g:\\SteamLibrary\\steamapps\\common\\Factorio\\bin\\x64\\factorio.exe"
+            "factorioPath": "/mnt/6459bc3a-dd91-42e5-8723-71427d99d0ba/SteamLibrary/steamapps/common/Factorio/bin/x64/factorio"
         }
     ],
+    
+    "Lua.workspace.checkThirdParty": "ApplyInMemory",
     "Lua.workspace.userThirdParty": [
-        "c:\\Users\\marce\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ae688ef9aceac2d9e899e484e2a4f130\\justarandomgeek.factoriomod-debug\\sumneko-3rd"
-    ],
-    "Lua.workspace.checkThirdParty": "ApplyInMemory"
+        "/home/marcel/.config/Code/User/workspaceStorage/fa983c1aa79fbb6a05ec6b0a16a2ed2a/justarandomgeek.factoriomod-debug/sumneko-3rd"
+    ]
 }

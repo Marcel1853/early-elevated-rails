@@ -32,8 +32,65 @@ if mods["boblogistics"] then
             table.insert(railway_effects, { type = "unlock-recipe", recipe = "bob-rail-support" })
         end
 
+        -- FIX: rail-planner-allow-elevated-rails Modifier fehlte in neuen Spielen.
+        -- Falls elevated-rail deaktiviert ist, muss der Modifier trotzdem in railway sein.
+        local has_rail_planner = false
+        for _, effect in pairs(railway_effects) do
+            if effect.type == "rail-planner-allow-elevated-rails" then
+                has_rail_planner = true
+                break
+            end
+        end
+        if not has_rail_planner then
+            table.insert(railway_effects, { type = "rail-planner-allow-elevated-rails", modifier = true })
+        end
+
         data.raw.technology["railway"].effects = railway_effects
     end
+end
+
+-- FIX (Deep-Sea-Bug): rail-support-foundations hat "elevated-rail" als Voraussetzung.
+-- Da elevated-rail durch diesen Mod deaktiviert wird, kann
+-- rail-support-foundations sonst nie erforscht werden.
+if data.raw.technology["rail-support-foundations"] then
+    local prereqs     = data.raw.technology["rail-support-foundations"].prerequisites or {}
+    local new_prereqs = {}
+    local replaced    = false
+
+    for _, prereq in ipairs(prereqs) do
+        if prereq == "elevated-rail" then
+            if not replaced then
+                local already_has_railway = false
+                for _, p in ipairs(prereqs) do
+                    if p == "railway" then
+                        already_has_railway = true
+                        break
+                    end
+                end
+                if not already_has_railway then
+                    table.insert(new_prereqs, "railway")
+                end
+                replaced = true
+            end
+        else
+            table.insert(new_prereqs, prereq)
+        end
+    end
+
+    if not replaced then
+        local already_has_railway = false
+        for _, p in ipairs(new_prereqs) do
+            if p == "railway" then
+                already_has_railway = true
+                break
+            end
+        end
+        if not already_has_railway then
+            table.insert(new_prereqs, "railway")
+        end
+    end
+
+    data.raw.technology["rail-support-foundations"].prerequisites = new_prereqs
 end
 
 -- ============================================
