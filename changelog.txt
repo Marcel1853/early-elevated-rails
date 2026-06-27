@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.0.5
+Date: 2026-06-27
+  Changes:
+    - Updated for Factorio 2.1 compatibility.
+    - Bumped factorio_version to 2.1 and dependency versions accordingly.
+    - Minor cleanup following Factorio 2.1 modding guidelines.
+---------------------------------------------------------------------------------------------------
 Version: 0.0.4
 Date: 2026-06-05
   Bugfixes:
