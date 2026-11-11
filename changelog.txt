@@ -1,4 +1,27 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.0.6
+Date: 2026-11-11
+  Bugfixes:
+    - Fixed the "Toggle visibility of tall entities" shortcut never becoming available: it still
+      waited for the hidden Elevated rail technology. It now unlocks with Railway.
+    - Fixed the "Elevated rails" tips-and-tricks entry never showing: its trigger now uses Railway.
+    - Fixed existing saves where Railway was already researched: the Rail Planner could not switch
+      to elevated rails (G) because the technology modifier was never applied. Recipes from other
+      mods (e.g. Bob's) that end up in Railway are now applied as well.
+    - Fixed any technology (also from other mods) that required Elevated rail being impossible to
+      research. All such prerequisites are now replaced by Railway, not only rail-support-foundations.
+  Changes:
+    - All effects of the Elevated rail technology are now moved to Railway automatically instead of
+      using a fixed recipe list, so additions from other mods are kept.
+    - Bob's Logistics: the effects of its own elevated rail technology are moved the same way.
+    - Removed duplicated code between vanilla.lua and mod-support.lua.
+    - Thumbnail reduced to 144x144 (1.9 MB to 30 KB).
+  Info:
+    - Rail ramps and supports need refined concrete, which is unlocked by the Concrete technology.
+      Railway does not require Concrete, so research Concrete before building elevated rails.
+    - New release workflow: skips the upload correctly when the version is already on the portal and
+      no longer packs development files.
+---------------------------------------------------------------------------------------------------
 Version: 0.0.5
 Date: 2026-06-27
   Changes:
@@ -49,7 +72,6 @@ Date: 2025-10-22
     - Improved code structure with separate vanilla and mod-support files.
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.1
-Date: ??
   Features:
     - Initial release.
     - Makes elevated rails available at railway technology (red + green science).

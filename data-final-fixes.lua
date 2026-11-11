@@ -1,7 +1,3 @@
----@diagnostic disable: undefined-global
-
--- Lade Vanilla-Änderungen
+-- Erst Vanilla, dann Mod-Unterstützung (beide nutzen prototypes/tech-util.lua).
 require("prototypes.vanilla")
-
--- Lade Mod-Support (falls Mods installiert sind)
 require("prototypes.mod-support")

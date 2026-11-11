@@ -1,44 +1,35 @@
----@diagnostic disable: undefined-global
+-- Bestehende Spielstände nachziehen: Factorio wendet neue Effekte einer bereits
+-- erforschten Technologie nicht von selbst an. Wer "railway" schon erforscht hat, als
+-- dieser Mod (oder eine neue Version) dazukam, bekäme sonst weder Rampe/Stütze noch
+-- das Umschalten auf Hochgleise im Gleisplaner (G).
+--
+-- Die Effekte werden aus dem Prototyp gelesen statt aus einer festen Liste – so sind
+-- auch Rezepte aus Bob's oder anderen Mods abgedeckt.
 
--- Rezepte die durch diesen Mod via "railway" freigeschaltet werden sollen
-local ELEVATED_RECIPES = {
-    "rail-ramp",
-    "rail-support",
-    "elevated-rail",
-}
+local TECHNOLOGY = "railway"
 
--- Stellt sicher dass alle elevated-rail Rezepte bei einer Force aktiv sind,
--- wenn railway ODER elevated-rail (alter Stand vor dem Mod) bereits erforscht ist.
--- Wird bei on_configuration_changed gebraucht, damit bestehende Saves nicht
--- plötzlich fehlende Rezepte haben.
-local function migrate_force(force)
-    -- Nur Forces mit eigenem Forschungsbaum (Spieler-Forces)
-    if not force.technologies then return end
-
-    local railway_tech = force.technologies["railway"]
-    local elevated_tech = force.technologies["elevated-rail"]
-
-    local has_access = (railway_tech  and railway_tech.researched)
-                    or (elevated_tech and elevated_tech.researched)
-
-    if not has_access then return end
-
-    for _, recipe_name in ipairs(ELEVATED_RECIPES) do
-        local recipe = force.recipes[recipe_name]
-        if recipe then
-            recipe.enabled = true
+local function apply_effects(force, effects)
+    for _, effect in pairs(effects) do
+        if effect.type == "unlock-recipe" then
+            local recipe = force.recipes[effect.recipe]
+            if recipe then recipe.enabled = true end
+        elseif effect.type == "rail-planner-allow-elevated-rails" then
+            force.rail_planner_allow_elevated_rails = true
         end
     end
 end
 
--- Läuft wenn Mods hinzugefügt, entfernt oder aktualisiert werden.
--- Stellt sicher dass bestehende Saves korrekt migriert werden.
-script.on_configuration_changed(function(event)
-    -- Nur wenn unser Mod sich geändert hat (Erstinstallation oder Update)
-    local our_change = event.mod_changes and event.mod_changes["early-elevated-rails"]
-    if not our_change then return end
-
+local function migrate_all_forces()
+    local prototype = prototypes.technology[TECHNOLOGY]
+    if not prototype then return end
     for _, force in pairs(game.forces) do
-        migrate_force(force)
+        local tech = force.technologies[TECHNOLOGY]
+        if tech and tech.researched then
+            apply_effects(force, prototype.effects)
+        end
     end
-end)
+end
+
+-- Bei jeder Änderung (Mod neu, Update, andere Mods geändert): kann die Effekte von
+-- "railway" verändern. Das Nachziehen ist idempotent und kostet nur einmal beim Laden.
+script.on_configuration_changed(migrate_all_forces)
